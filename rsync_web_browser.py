@@ -2,8 +2,10 @@ from flask import Flask, render_template, request, jsonify
 import os
 import json
 from log import log
+from rsync_runner import init_rsync_routes
 
 app = Flask(__name__, template_folder="web/templates", static_folder="web")
+init_rsync_routes(app)
 
 BASE_PATH = "/"
 SAVE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "saved_paths.json")
