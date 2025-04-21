@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Browse Folders</title>
+    <script>
+        function selectFolder(path) {
+            const field = "{{ field }}";
+            window.parent.document.getElementById(field).value = path;
+            window.parent.document.getElementById('browserFrame').src = '';
+        }
+    </script>
+</head>
+<body>
+    <h3>Browsing: {{ current }}</h3>
+
+    {% if parent %}
+        <a href="/browse?path={{ parent | urlencode }}&field={{ field }}">⬆️ Up</a><br><br>
+    {% endif %}
+
+    <ul>
+    {% for item in items %}
+        {% set full_path = current + '/' + item %}
+        <li>
+            <a href="/browse?path={{ full_path | urlencode }}&field={{ field }}">{{ item }}</a>
+            <button onclick="selectFolder('{{ full_path }}')">Select</button>
+        </li>
+    {% endfor %}
+    </ul>
+</body>
+</html>
