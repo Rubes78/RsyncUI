@@ -21,7 +21,11 @@ function runRsync() {
 
         if (event.data.includes("Rsync process finished")) {
             loadHistory();
-            const confirmMsg = document.createElement('div');
+            const oldBanner = document.getElementById("rsync-confirm");
+if (oldBanner) oldBanner.remove();
+
+const confirmMsg = document.createElement('div');
+confirmMsg.id = "rsync-confirm";
             confirmMsg.style.marginTop = "10px";
             confirmMsg.style.padding = "8px";
             confirmMsg.style.backgroundColor = "#d4edda";
