@@ -18,6 +18,10 @@ function runRsync() {
     eventSource.onmessage = function(event) {
         outputArea.textContent += event.data + "\n";
         outputArea.scrollTop = outputArea.scrollHeight;
+
+        if (event.data.includes("Rsync process finished")) {
+            loadHistory();  // Refresh history table without reloading page
+        }
     };
 
     eventSource.onerror = function(err) {
