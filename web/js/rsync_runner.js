@@ -20,6 +20,16 @@ function runRsync() {
         outputArea.scrollTop = outputArea.scrollHeight;
 
         if (event.data.includes("Rsync process finished")) {
+            loadHistory();
+            const confirmMsg = document.createElement('div');
+            confirmMsg.style.marginTop = "10px";
+            confirmMsg.style.padding = "8px";
+            confirmMsg.style.backgroundColor = "#d4edda";
+            confirmMsg.style.color = "#155724";
+            confirmMsg.style.border = "1px solid #c3e6cb";
+            confirmMsg.style.borderRadius = "4px";
+            confirmMsg.textContent = "✅ Sync Completed and History Updated";
+            document.body.insertBefore(confirmMsg, document.body.firstChild);
             loadHistory();  // Refresh history table without reloading page
         }
     };
