@@ -4,15 +4,77 @@
 <head>
   <title>Rsync Web UI</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #f9f9f9; padding: 20px; }
-    h2, h3 { color: #333; }
-    label { display: block; margin-top: 10px; }
-    input[type="text"] { width: 60%; padding: 6px; margin-top: 5px; }
-    button { margin-top: 10px; padding: 8px 16px; }
-    #rsync-console { background: #000; color: #0f0; padding: 10px; height: 200px; overflow-y: auto; font-family: monospace; margin-top: 20px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 6px 10px; text-align: left; }
-    #status-message { margin-top: 15px; padding: 10px; background: #e0f7fa; color: #006064; display: none; }
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f0f4f8;
+      margin: 0;
+      padding: 20px;
+    }
+    h2 {
+      color: #2c3e50;
+      margin-bottom: 10px;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+      color: #34495e;
+    }
+    input[type="text"] {
+      width: 60%;
+      padding: 8px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      margin-left: 10px;
+      padding: 8px 16px;
+      border: none;
+      background-color: #2980b9;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #3498db;
+    }
+    #rsync-console {
+      background-color: #000;
+      color: #0f0;
+      padding: 10px;
+      height: 200px;
+      overflow-y: auto;
+      font-family: monospace;
+      margin-top: 20px;
+      border-radius: 4px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background-color: white;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: left;
+    }
+    th {
+      background-color: #2980b9;
+      color: white;
+    }
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    #status-message {
+      margin-top: 15px;
+      padding: 10px;
+      background: #e0f7fa;
+      color: #006064;
+      display: none;
+      border-radius: 4px;
+    }
   </style>
 </head>
 <body>
@@ -32,9 +94,12 @@
     <input type="text" id="rsync-options" value="-avh --progress">
   </label>
 
-  <label><input type="checkbox" id="logOutput" checked> Log output to file</label>
+  <label>
+    <input type="checkbox" id="logOutput" checked>
+    Log output to file
+  </label>
 
-  <div>
+  <div style="margin-top: 15px;">
     <button onclick="runSync()">Run Sync</button>
     <button onclick="savePaths()">Save Paths</button>
   </div>
