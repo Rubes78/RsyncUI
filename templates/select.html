@@ -2,138 +2,110 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Rsync Web UI</title>
+  <title>Rsync Web GUI</title>
   <style>
     body {
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f0f4f8;
+      font-family: sans-serif;
+      background: #f4f4f4;
       margin: 0;
       padding: 20px;
     }
     h2 {
-      color: #2c3e50;
-      margin-bottom: 10px;
+      margin-bottom: 0.5em;
+    }
+    .section {
+      background: white;
+      border-radius: 8px;
+      padding: 1em 2em;
+      margin-bottom: 1.5em;
+      box-shadow: 0 0 8px rgba(0,0,0,0.05);
     }
     label {
-      display: block;
-      margin-top: 15px;
       font-weight: bold;
-      color: #34495e;
+      display: inline-block;
+      width: 140px;
     }
-    input[type="text"] {
-      width: 60%;
-      padding: 8px;
-      margin-top: 5px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+    input[type="text"], input[type="text"]:focus {
+      width: 50%;
+      padding: 6px;
+      margin-right: 10px;
     }
     button {
-      margin-left: 10px;
-      padding: 8px 16px;
+      padding: 6px 12px;
       border: none;
-      background-color: #2980b9;
-      color: white;
       border-radius: 4px;
+      background-color: #3366cc;
+      color: white;
       cursor: pointer;
     }
     button:hover {
-      background-color: #3498db;
-    }
-    #rsync-console {
-      background-color: #000;
-      color: #0f0;
-      padding: 10px;
-      height: 200px;
-      overflow-y: auto;
-      font-family: monospace;
-      margin-top: 20px;
-      border-radius: 4px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-      background-color: white;
-    }
-    th, td {
-      border: 1px solid #ddd;
-      padding: 10px;
-      text-align: left;
-    }
-    th {
-      background-color: #2980b9;
-      color: white;
-    }
-    tr:nth-child(even) {
-      background-color: #f9f9f9;
+      background-color: #254a99;
     }
     #status-message {
-      margin-top: 15px;
-      padding: 10px;
-      background: #e0f7fa;
-      color: #006064;
+      padding: 8px;
+      background: #e8f5e9;
+      border-left: 5px solid #2e7d32;
+      margin-bottom: 1em;
       display: none;
-      border-radius: 4px;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      background: white;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+    }
+    tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+    .history-row-highlight {
+      animation: highlightFade 2s ease-out;
+      background: #fffec4 !important;
+    }
+    @keyframes highlightFade {
+      0%   { background: #fffec4; }
+      100% { background: white; }
     }
   </style>
+  <script src="/static/js/folderpicker.js"></script>
+  <script src="/static/js/rsync_runner.js"></script>
 </head>
 <body>
-  <h2>Rsync Web UI</h2>
 
-  <label for="source-folder">Source Folder:
-    <input type="text" id="source-folder" readonly>
-    <button onclick="openBrowser('source')">Browse</button>
-  </label>
-
-  <label for="destination-folder">Destination Folder:
-    <input type="text" id="destination-folder" readonly>
-    <button onclick="openBrowser('destination')">Browse</button>
-  </label>
-
-  <label for="rsync-options">Rsync Options:
-    <input type="text" id="rsync-options" value="-avh --progress">
-  </label>
-
-  <label>
-    <input type="checkbox" id="logOutput" checked>
-    Log output to file
-  </label>
-
-  <div style="margin-top: 15px;">
-    <button onclick="runSync()">Run Sync</button>
-    <button onclick="savePaths()">Save Paths</button>
-  </div>
+  <h2>Rsync Web Interface</h2>
 
   <div id="status-message"></div>
+
+  <div class="section">
+    <h3>Sync Folders</h3>
+    <p><label>Source Folder:</label>
+      <input type="text" id="source-folder">
+      <button onclick="openFolderPicker('source-folder')">Browse</button></p>
+    <p><label>Destination Folder:</label>
+      <input type="text" id="destination-folder">
+      <button onclick="openFolderPicker('destination-folder')">Browse</button></p>
+    <p><label>Rsync Options:</label>
+      <input type="text" id="rsync-options" value="-avh --progress"></p>
+    <p><label>Log Output:</label>
+      <input type="checkbox" id="logOutput" checked></p>
+    <p><button onclick="savePaths()">Save Paths</button>
+       <button onclick="runSync()">Run Sync</button></p>
+  </div>
 
   <div class="section">
     <h3>Sync History</h3>
     <table id="history-table">
       <thead>
-        <tr><th>Source</th><th>Destination</th><th>Options</th><th>Time</th><th>Action</th></tr>
+        <tr><th>Source</th><th>Destination</th><th>Options</th><th>Time</th><th>Replay</th></tr>
       </thead>
       <tbody></tbody>
     </table>
   </div>
 
-  <div class="section">
-    <h3>Rsync Output</h3>
-    <div id="rsync-console"></div>
-  </div>
-
-  <script src="/static/js/folderpicker.js"></script>
-  <script src="/static/js/rsync_runner.js"></script>
-  <script>
-    window.onload = () => {
-      if (typeof loadHistory === "function") loadHistory();
-      fetch("/load-paths")
-        .then(res => res.json())
-        .then(paths => {
-          document.getElementById("source-folder").value = paths.source || "";
-          document.getElementById("destination-folder").value = paths.destination || "";
-        })
-        .catch(err => console.error("Failed to load saved paths:", err));
-    };
-  </script>
 </body>
 </html>

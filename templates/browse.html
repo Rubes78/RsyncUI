@@ -1,84 +1,64 @@
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Select Folder</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      background: #f4f4f4;
-      padding: 20px;
-    }
-    ul {
-      list-style: none;
-      padding: 0;
-    }
-    li {
-      padding: 6px;
-      background: white;
-      margin-bottom: 4px;
-      border-radius: 4px;
-      cursor: pointer;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    }
-    li:hover {
-      background: #e0e0e0;
-    }
-    h2 {
-      margin-top: 0;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Select Folder</title>
+    <style>
+        body { font-family: sans-serif; padding: 1em; }
+        ul { list-style: none; padding: 0; }
+        li { margin: 4px 0; }
+        a { text-decoration: none; color: blue; }
+        .folder { font-weight: bold; }
+    </style>
 </head>
 <body>
-  <h2>Select a Folder</h2>
-  <ul id="folder-list"></ul>
+    <h3>Select a Folder</h3>
+    <div id="currentPath"></div>
+    <ul id="folderList"></ul>
 
-  <script>
-    const params = new URLSearchParams(window.location.search);
-    const field = params.get("field");
-    let currentPath = "/";
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const field = urlParams.get("field");
+        let path = "/";
 
-    function fetchFolders(path) {
-      fetch("/browse-folder?path=" + encodeURIComponent(path))
-        .then(res => res.json())
-        .then(data => {
-          currentPath = path;
-          const list = document.getElementById("folder-list");
-          list.innerHTML = "";
+        function fetchFolders(targetPath) {
+            fetch(`/browse-folder?path=${encodeURIComponent(targetPath)}&field=${field}`)
+                .then(response => response.json())
+                .then(data => {
+                    path = data.path;
+                    document.getElementById("currentPath").innerText = "Current: " + data.path;
 
-          if (path !== "/") {
-            const parent = document.createElement("li");
-            parent.textContent = ".. (Up one level)";
-            parent.onclick = () => {
-              const up = path.split("/").filter(p => p).slice(0, -1).join("/");
-              fetchFolders("/" + up);
-            };
-            list.appendChild(parent);
-          }
+                    const list = document.getElementById("folderList");
+                    list.innerHTML = "";
 
-          data.folders.forEach(folder => {
-            const li = document.createElement("li");
-            li.textContent = folder;
-            li.onclick = () => {
-              const fullPath = path.endsWith("/") ? path + folder : path + "/" + folder;
-              fetchFolders(fullPath);
-            };
-            list.appendChild(li);
-          });
+                    if (data.path !== "/") {
+                        const up = document.createElement("li");
+                        up.innerHTML = `<a href="#" onclick="fetchFolders('${data.parent}')">[..]</a>`;
+                        list.appendChild(up);
+                    }
 
-          const confirm = document.createElement("li");
-          confirm.textContent = "[ Select This Folder ]";
-          confirm.style.fontWeight = "bold";
-          confirm.style.color = "#2e7d32";
-          confirm.onclick = () => {
-            window.opener.document.getElementById(field).value = currentPath;
-            window.close();
-          };
-          list.appendChild(confirm);
-        });
-    }
+                    data.folders.forEach(folder => {
+                        const li = document.createElement("li");
+                        const clean = folder.replace(/\/g, "/");
+                        li.innerHTML = `<a href="#" onclick="fetchFolders('${clean}')">${folder.split("/").pop()}</a> 
+                                        <button onclick="selectFolder('${clean}')">Select</button>`;
+                        list.appendChild(li);
+                    });
+                });
+        }
 
-    fetchFolders("/");
-  </script>
+        function selectFolder(folderPath) {
+            if (window.opener && field) {
+                const input = window.opener.document.getElementById(field + "Path");
+                if (input) {
+                    input.value = folderPath;
+                }
+                window.close();
+            }
+        }
+
+        fetchFolders("/");
+    </script>
 </body>
 </html>

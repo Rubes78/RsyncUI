@@ -1,3 +1,4 @@
+
 from flask import Response, request, jsonify
 import subprocess
 import json
@@ -6,7 +7,9 @@ from datetime import datetime
 from log import log
 
 def init_rsync_routes(app):
-    @app.route("/run-rsync", methods=["POST"])
+    def get_project_file(filename):
+        return os.path.join(os.getcwd(), filename)
+
     def run_rsync():
         data = request.get_json()
         source = data.get("source")
@@ -20,7 +23,8 @@ def init_rsync_routes(app):
         cmd = ["rsync"] + options.split() + [source, destination]
         log(f"Executing rsync command: {' '.join(cmd)}", "info")
 
-        history_path = os.path.join(os.getcwd(), "sync_history.json")
+        history_path = get_project_file("sync_history.json")
+        saved_paths_path = get_project_file("saved_paths.json")
         history_entry = {
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "source": source,
@@ -28,20 +32,25 @@ def init_rsync_routes(app):
             "options": options
         }
 
+        try:
+            with open(saved_paths_path, "w") as f:
+                json.dump({"source": source, "destination": destination}, f, indent=2)
+            log("Saved paths updated", "debug")
+        except Exception as e:
+            log(f"Failed to save paths: {e}", "error")
+
         def generate():
             try:
-                # Save run to history
                 if os.path.exists(history_path):
                     with open(history_path, "r") as f:
                         history = json.load(f)
                 else:
                     history = []
 
-                history.insert(0, history_entry)  # newest first
+                history.insert(0, history_entry)
                 with open(history_path, "w") as f:
                     json.dump(history, f, indent=2)
 
-                # Run rsync
                 process = subprocess.Popen(
                     cmd,
                     stdout=subprocess.PIPE,
@@ -62,9 +71,9 @@ def init_rsync_routes(app):
                 yield f"data: Error running rsync: {e}\n\n"
 
         return Response(generate(), mimetype="text/event-stream")
-    @app.route("/sync-history", methods=["GET"])
+
     def sync_history():
-        history_path = os.path.join(os.getcwd(), "sync_history.json")
+        history_path = get_project_file("sync_history.json")
         if os.path.exists(history_path):
             try:
                 with open(history_path, "r") as f:
@@ -76,3 +85,19 @@ def init_rsync_routes(app):
         else:
             return jsonify([])
 
+    def load_saved_paths():
+        saved_paths_path = get_project_file("saved_paths.json")
+        if os.path.exists(saved_paths_path):
+            try:
+                with open(saved_paths_path, "r") as f:
+                    return jsonify(json.load(f))
+            except Exception as e:
+                log(f"Failed to read saved_paths.json: {e}", "error")
+                return jsonify({"error": str(e)}), 500
+        else:
+            return jsonify({})
+
+    # Use unique endpoint names
+    app.add_url_rule("/run-rsync", view_func=run_rsync, methods=["POST"], endpoint="run_rsync_route")
+    app.add_url_rule("/sync-history", view_func=sync_history, methods=["GET"], endpoint="sync_history_route")
+    app.add_url_rule("/load-paths", view_func=load_saved_paths, methods=["GET"], endpoint="load_saved_paths_route")
