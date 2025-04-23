@@ -1,64 +1,61 @@
 
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
     <title>Select Folder</title>
     <style>
-        body { font-family: sans-serif; padding: 1em; }
-        ul { list-style: none; padding: 0; }
-        li { margin: 4px 0; }
-        a { text-decoration: none; color: blue; }
-        .folder { font-weight: bold; }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h2 {
+            margin-bottom: 10px;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            padding: 8px;
+            margin: 4px 0;
+            background-color: #f2f2f2;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        li:hover {
+            background-color: #e0e0e0;
+        }
+        .nav-buttons {
+            margin-bottom: 15px;
+        }
     </style>
-</head>
-<body>
-    <h3>Select a Folder</h3>
-    <div id="currentPath"></div>
-    <ul id="folderList"></ul>
-
     <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const field = urlParams.get("field");
-        let path = "/";
-
-        function fetchFolders(targetPath) {
-            fetch(`/browse-folder?path=${encodeURIComponent(targetPath)}&field=${field}`)
-                .then(response => response.json())
-                .then(data => {
-                    path = data.path;
-                    document.getElementById("currentPath").innerText = "Current: " + data.path;
-
-                    const list = document.getElementById("folderList");
-                    list.innerHTML = "";
-
-                    if (data.path !== "/") {
-                        const up = document.createElement("li");
-                        up.innerHTML = `<a href="#" onclick="fetchFolders('${data.parent}')">[..]</a>`;
-                        list.appendChild(up);
-                    }
-
-                    data.folders.forEach(folder => {
-                        const li = document.createElement("li");
-                        const clean = folder.replace(/\/g, "/");
-                        li.innerHTML = `<a href="#" onclick="fetchFolders('${clean}')">${folder.split("/").pop()}</a> 
-                                        <button onclick="selectFolder('${clean}')">Select</button>`;
-                        list.appendChild(li);
-                    });
-                });
+        function selectFolder(folderPath) {
+            window.opener.postMessage({ folderPath: folderPath }, "*");
+            window.close();
         }
 
-        function selectFolder(folderPath) {
-            if (window.opener && field) {
-                const input = window.opener.document.getElementById(field + "Path");
-                if (input) {
-                    input.value = folderPath;
-                }
-                window.close();
+        function goBack(currentPath) {
+            const parts = currentPath.split("/").filter(Boolean);
+            if (parts.length > 0) {
+                parts.pop();  // Go up one directory
+                const newPath = "/" + parts.join("/");
+                window.location.href = "/browse-folder?path=" + encodeURIComponent(newPath);
             }
         }
-
-        fetchFolders("/");
     </script>
+</head>
+<body>
+    <h2>Select a Folder</h2>
+    <div class="nav-buttons">
+        <button onclick="goBack('{{ current_path }}')">⬅ Back</button>
+    </div>
+    <ul>
+        {% for subdir in subdirs %}
+            <li onclick="selectFolder('{{ subdir }}')">{{ subdir }}</li>
+        {% else %}
+            <li>No subdirectories found.</li>
+        {% endfor %}
+    </ul>
 </body>
 </html>
