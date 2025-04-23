@@ -1,0 +1,111 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Rsync Web GUI</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+    }
+    h2 {
+      margin-bottom: 0.5em;
+    }
+    .section {
+      background: white;
+      border-radius: 8px;
+      padding: 1em 2em;
+      margin-bottom: 1.5em;
+      box-shadow: 0 0 8px rgba(0,0,0,0.05);
+    }
+    label {
+      font-weight: bold;
+      display: inline-block;
+      width: 140px;
+    }
+    input[type="text"], input[type="text"]:focus {
+      width: 50%;
+      padding: 6px;
+      margin-right: 10px;
+    }
+    button {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      background-color: #3366cc;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #254a99;
+    }
+    #status-message {
+      padding: 8px;
+      background: #e8f5e9;
+      border-left: 5px solid #2e7d32;
+      margin-bottom: 1em;
+      display: none;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      background: white;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+    }
+    tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+    .history-row-highlight {
+      animation: highlightFade 2s ease-out;
+      background: #fffec4 !important;
+    }
+    @keyframes highlightFade {
+      0%   { background: #fffec4; }
+      100% { background: white; }
+    }
+  </style>
+  <script src="/static/js/folderpicker.js"></script>
+  <script src="/static/js/rsync_runner.js"></script>
+</head>
+<body>
+
+  <h2>Rsync Web Interface</h2>
+
+  <div id="status-message"></div>
+
+  <div class="section">
+    <h3>Sync Folders</h3>
+    <p><label>Source Folder:</label>
+      <input type="text" id="source-folder">
+      <button onclick="openFolderPicker('source-folder')">Browse</button></p>
+    <p><label>Destination Folder:</label>
+      <input type="text" id="destination-folder">
+      <button onclick="openFolderPicker('destination-folder')">Browse</button></p>
+    <p><label>Rsync Options:</label>
+      <input type="text" id="rsync-options" value="-avh --progress"></p>
+    <p><label>Log Output:</label>
+      <input type="checkbox" id="logOutput" checked></p>
+    <p><button onclick="savePaths()">Save Paths</button>
+       <button onclick="runSync()">Run Sync</button></p>
+  </div>
+
+  <div class="section">
+    <h3>Sync History</h3>
+    <table id="history-table">
+      <thead>
+        <tr><th>Source</th><th>Destination</th><th>Options</th><th>Time</th><th>Replay</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+</body>
+</html>
